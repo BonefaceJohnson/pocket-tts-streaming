@@ -26,6 +26,15 @@ However, if you want to use the **Voice Cloning** feature, you will need to prov
 
 ---
 
+## 💻 Hardware Requirements
+
+This Add-on is optimized for x86_64 and aarch64 systems. 
+
+* **Recommended:** Intel i5 / N100 or equivalent. On an i5, inference is nearly instantaneous.
+* **Raspberry Pi:** While it will run on a Raspberry Pi 4/5, please note that PyTorch inference is CPU-intensive. You may experience higher latency or stuttering on lower-powered ARM SBCs compared to a dedicated mini-PC.
+  
+---
+
 ## 🛠️ Installation
 
 1. Navigate to **Settings > Add-ons > Add-on Store** in Home Assistant.
