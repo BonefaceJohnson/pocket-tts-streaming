@@ -17,7 +17,7 @@ options:
   pytorch_threads: 4
   speaker_tail_padding: 0.3
 schema:
-  hf_token: str
+  hf_token: password
   voice: str
   log_level: list(debug|info|warning|error)
   s2s_quick_yield_single_sentence_fragment: bool
@@ -27,6 +27,8 @@ schema:
   pytorch_threads: int(1,)
   speaker_tail_padding: float(0,)
 ports:
-  10201/tcp: 10201
+  10222/tcp: 10222
+discovery:
+  - wyoming
 map:
   - share:rw
