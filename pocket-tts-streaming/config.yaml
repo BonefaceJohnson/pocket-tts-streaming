@@ -1,6 +1,6 @@
 name: "Pocket TTS Streaming"
 description: "Ultra-low latency streaming TTS using PocketTTS and the Wyoming protocol."
-version: "1.1.0"
+version: "1.2.0"
 slug: "pocket_tts_streaming"
 init: false
 arch:
@@ -9,6 +9,7 @@ arch:
 options:
   hf_token: ""
   language: "german"
+  builtin_voices: "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"
   voice: "alba"
   log_level: "info"
   s2s_quick_yield_single_sentence_fragment: true
