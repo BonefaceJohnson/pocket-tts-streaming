@@ -1,6 +1,6 @@
 # Pocket TTS Streaming for Home Assistant
 
-GERMAN TTS VERSION
+Added support for other langugages and changeable builtin voices.
 
 
 An ultra-low latency, fully local Text-to-Speech (TTS) engine for Home Assistant, powered by the Wyoming protocol and Kyutai's Pocket TTS model. 
