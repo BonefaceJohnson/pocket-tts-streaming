@@ -1,6 +1,6 @@
 name: "Pocket TTS Streaming"
 description: "Ultra-low latency streaming TTS using PocketTTS and the Wyoming protocol."
-version: "2.0.0"
+version: "1.0.0"
 slug: "pocket_tts_streaming"
 init: false
 arch:
@@ -19,7 +19,7 @@ options:
   speaker_tail_padding: 0.3
 schema:
   hf_token: password
-  language: list(german|english|french|spanish)
+  language: str
   voice: str
   log_level: list(debug|info|warning|error)
   s2s_quick_yield_single_sentence_fragment: bool
