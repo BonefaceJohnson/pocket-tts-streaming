@@ -33,6 +33,7 @@ def load_config():
     config = {
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
+        "language": os.getenv("LANGUAGE", "german"),
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
         "data_dir": base_data,
@@ -50,7 +51,7 @@ def load_config():
     if opts_path.exists():
         try:
             opts = json.loads(opts_path.read_text())
-            for k in ["hf_token", "port", "voice", "log_level"]:
+            for k in ["hf_token", "port", "language", "voice", "log_level"]:
                 if k in opts: config[k] = opts[k]
             
             if "s2s_quick_yield_single_sentence_fragment" in opts: 
@@ -378,8 +379,8 @@ async def main():
     _LOGGER.info(f"Starting Pocket TTS Streaming on port {CFG['port']}...")
     
     try:
-        _LOGGER.info("Loading Pocket TTS model weights...")
-        model = TTSModel.load_model(language="german")
+        _LOGGER.info(f"Loading Pocket TTS model weights for language: {CFG['language']}...")
+        model = TTSModel.load_model(language=CFG["language"])
         
         # Process pending .wav files on startup
         for wav_path in CFG["voices_dir"].glob("*.wav"):
