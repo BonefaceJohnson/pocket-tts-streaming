@@ -21,6 +21,7 @@ options:
 schema:
   hf_token: password
   language: str
+  builtin_voices: str
   voice: str
   log_level: list(debug|info|warning|error)
   s2s_quick_yield_single_sentence_fragment: bool
