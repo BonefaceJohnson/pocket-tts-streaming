@@ -35,6 +35,7 @@ def load_config():
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
+        "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
         "data_dir": base_data,
         "models_dir": base_data / "models",
@@ -51,7 +52,7 @@ def load_config():
     if opts_path.exists():
         try:
             opts = json.loads(opts_path.read_text())
-            for k in ["hf_token", "port", "language", "voice", "log_level"]:
+            for k in ["hf_token", "port", "language", "voice", "builtin_voices", "log_level"]:
                 if k in opts: config[k] = opts[k]
             
             if "s2s_quick_yield_single_sentence_fragment" in opts: 
@@ -395,11 +396,10 @@ async def main():
                 except Exception as e:
                     _LOGGER.error(f"Failed to process {wav_path.name} on startup: {e}")
 
-        # Load Initial Base Voices and Safetensors
-        builtin_voices = [
-            "alba", "marius", "javert", "jean", "eve",
-            "fantine", "cosette", "eponine", "azelma"
-        ]
+        # Load Initial Base Voices from config
+        builtin_voices = [v.strip() for v in CFG["builtin_voices"].split(",")]
+        _LOGGER.info(f"Loading builtin voices: {', '.join(builtin_voices)}")
+        
         voice_states = {v: model.get_state_for_audio_prompt(v) for v in builtin_voices}
         
         for p in CFG["voices_dir"].glob("*.safetensors"):
