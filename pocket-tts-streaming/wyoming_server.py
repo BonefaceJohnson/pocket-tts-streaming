@@ -301,7 +301,7 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
-        voices = [TtsVoice(name=n, languages=["en"], installed=True, version="1.0",
+        voices = [TtsVoice(name=n, languages=["de"], installed=True, version="1.0",
                            attribution={"name": "Kyutai", "url": "https://kyutai.org"},
                            description=f"Pocket TTS: {n}") for n in self.voice_states]
         return Info(tts=[TtsProgram(name="Pocket TTS Streaming", installed=True, voices=voices, 
@@ -379,7 +379,7 @@ async def main():
     
     try:
         _LOGGER.info("Loading Pocket TTS model weights...")
-        model = TTSModel.load_model()
+        model = TTSModel.load_model(language=german)
         
         # Process pending .wav files on startup
         for wav_path in CFG["voices_dir"].glob("*.wav"):
