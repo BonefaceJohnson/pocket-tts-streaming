@@ -303,7 +303,7 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
-        voices = [TtsVoice(name=n, languages=["de_DE"], installed=True, version="2.0",
+        voices = [TtsVoice(name=n, languages=["de"], installed=True, version="2.0",
                            attribution={"name": "Kyutai", "url": "https://kyutai.org"},
                            description=f"Pocket TTS: {n}") for n in self.voice_states]
         return Info(tts=[TtsProgram(name="Pocket TTS Streaming", installed=True, voices=voices, 
