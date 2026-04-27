@@ -301,11 +301,11 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
-        voices = [TtsVoice(name=n, languages=["de"], installed=True, version="1.0",
+        voices = [TtsVoice(name=n, languages=["de"], installed=True, version="2.0",
                            attribution={"name": "Kyutai", "url": "https://kyutai.org"},
                            description=f"Pocket TTS: {n}") for n in self.voice_states]
         return Info(tts=[TtsProgram(name="Pocket TTS Streaming", installed=True, voices=voices, 
-                                    version="1.0.0", supports_synthesize_streaming=True,
+                                    version="2.0.0", supports_synthesize_streaming=True,
                                     attribution={"name": "Kyutai", "url": "https://kyutai.org"},
                                     description="Ultra-low latency streaming TTS")])
 
@@ -396,7 +396,7 @@ async def main():
 
         # Load Initial Base Voices and Safetensors
         builtin_voices = [
-            "alba", "marius", "javert", "jean", 
+            "alba", "marius", "javert", "jean", "eve",
             "fantine", "cosette", "eponine", "azelma"
         ]
         voice_states = {v: model.get_state_for_audio_prompt(v) for v in builtin_voices}
