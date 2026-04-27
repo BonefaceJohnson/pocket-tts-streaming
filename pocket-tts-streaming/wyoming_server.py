@@ -379,7 +379,7 @@ async def main():
     
     try:
         _LOGGER.info("Loading Pocket TTS model weights...")
-        model = TTSModel.load_model(language='german')
+        model = TTSModel.load_model(language='german_24l')
         
         # Process pending .wav files on startup
         for wav_path in CFG["voices_dir"].glob("*.wav"):
