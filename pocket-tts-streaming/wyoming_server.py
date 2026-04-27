@@ -34,7 +34,6 @@ def load_config():
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
-        "lang": os.getenv("language", "german"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
         "data_dir": base_data,
         "models_dir": base_data / "models",
@@ -380,7 +379,7 @@ async def main():
     
     try:
         _LOGGER.info("Loading Pocket TTS model weights...")
-        model = TTSModel.load_model(language=CFG["lang"])
+        model = TTSModel.load_model(language="german")
         
         # Process pending .wav files on startup
         for wav_path in CFG["voices_dir"].glob("*.wav"):
