@@ -3,6 +3,9 @@
 Added support for other languages and changeable builtin voices.
 
 
+
+
+
 An ultra-low latency, fully local Text-to-Speech (TTS) engine for Home Assistant, powered by the Wyoming protocol and Kyutai's Pocket TTS model. 
 
 This Add-on doesn't just read text—it allows your Home Assistant LLM to dynamically change voices, express emotions, and switch characters mid-sentence using simple text tags, all while running entirely on your local hardware.
