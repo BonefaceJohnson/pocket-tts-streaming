@@ -294,40 +294,33 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
-        # Mapping von Sprachbezeichnern im Stimmnamen zu ISO-Sprachcodes
-        lang_mapping = {
-            "english": "en",
-            "portuguese": "pt",
-            "italian": "it",
-            "german": "de",
-            "spanish": "es",
-            "french": "fr",
-        }
-        voice_languages = getattr(CFG, "voice_languages", {})
-        default_language = CFG.get("default_language", "de")
-
-        voices = []
-        for n in self.voice_states:
-            language = default_language
-            # 1. Prüfe manuelle Zuordnung
-            if n in voice_languages:
-                language = voice_languages[n]
-            # 2. Prüfe automatische Erkennung
-            else:
-                for lang_name, iso_code in lang_mapping.items():
-                    if lang_name in n:
-                        language = iso_code
-                        break
-            voices.append(
-                TtsVoice(
-                    name=n,
-                    languages=[language],
-                    installed=True,
-                    version="2.0",
-                    attribution={"name": "Kyutai", "url": "https://kyutai.org"},
-                    description=f"Pocket TTS: {n}"
-                )
-            )
+      # Verwende den manuell definierten wyoming_language für alle Stimmen
+      wyoming_language = CFG.get("wyoming_language", "de")  # Fallback: "de"
+  
+      voices = []
+      for n in self.voice_states:
+          voices.append(
+              TtsVoice(
+                  name=n,
+                  languages=[wyoming_language],  # Alle Stimmen verwenden den gleichen ISO-Code
+                  installed=True,
+                  version="2.0",
+                  attribution={"name": "Kyutai", "url": "https://kyutai.org"},
+                  description=f"Pocket TTS: {n}"
+              )
+          )
+  
+      return Info(
+          tts=[TtsProgram(
+              name="Pocket TTS Streaming",
+              installed=True,
+              voices=voices,
+              version="2.0.0",
+              supports_synthesize_streaming=True,
+              attribution={"name": "Kyutai", "url": "https://kyutai.org"},
+              description="Ultra-low latency streaming TTS"
+          )]
+      )
 
         return Info(
             tts=[TtsProgram(
