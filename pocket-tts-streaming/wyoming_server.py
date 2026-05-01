@@ -34,6 +34,7 @@ def load_config():
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
+        "default_language": os.getenv("DEFAULT_LANGUAGE", "de"),
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
         "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
@@ -63,7 +64,7 @@ def load_config():
     if opts_path.exists():
         try:
             opts = json.loads(opts_path.read_text())
-            for k in ["hf_token", "port", "language", "voice", "builtin_voices", "log_level"]:
+            for k in ["hf_token", "port", "language", "default_language", "voice", "builtin_voices", "log_level"]:
                 if k in opts: config[k] = opts[k]
 
             if "s2s_quick_yield_single_sentence_fragment" in opts:
@@ -315,7 +316,6 @@ class PocketTTSHandler(AsyncEventHandler):
             except Exception:
                 pass
 
-    
     def _get_info(self):
         # Mapping von Sprachbezeichnern im Stimmnamen zu ISO-Sprachcodes
         lang_mapping = {
@@ -327,10 +327,11 @@ class PocketTTSHandler(AsyncEventHandler):
             "french": "fr",
         }
         voice_languages = getattr(CFG, "voice_languages", {})
+        default_language = CFG.get("default_language", "de")
 
         voices = []
         for n in self.voice_states:
-            language = "de"
+            language = default_language
             # 1. Prüfe manuelle Zuordnung
             if n in voice_languages:
                 language = voice_languages[n]
@@ -343,7 +344,7 @@ class PocketTTSHandler(AsyncEventHandler):
             voices.append(
                 TtsVoice(
                     name=n,
-                    languages=[language],  # Sprache pro Stimme
+                    languages=[language],
                     installed=True,
                     version="2.0",
                     attribution={"name": "Kyutai", "url": "https://kyutai.org"},
@@ -355,7 +356,7 @@ class PocketTTSHandler(AsyncEventHandler):
             tts=[TtsProgram(
                 name="Pocket TTS Streaming",
                 installed=True,
-                voices=voices,  # Die Sprachen werden aus den Stimmen abgeleitet
+                voices=voices,
                 version="2.0.0",
                 supports_synthesize_streaming=True,
                 attribution={"name": "Kyutai", "url": "https://kyutai.org"},
