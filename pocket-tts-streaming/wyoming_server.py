@@ -302,14 +302,51 @@ class PocketTTSHandler(AsyncEventHandler):
             except Exception:
                 pass
 
-    def _get_info(self):
-        voices = [TtsVoice(name=n, languages=["de"], installed=True, version="2.0",
-                           attribution={"name": "Kyutai", "url": "https://kyutai.org"},
-                           description=f"Pocket TTS: {n}") for n in self.voice_states]
-        return Info(tts=[TtsProgram(name="Pocket TTS Streaming", installed=True, voices=voices, 
-                                    version="2.0.0", supports_synthesize_streaming=True,
-                                    attribution={"name": "Kyutai", "url": "https://kyutai.org"},
-                                    description="Ultra-low latency streaming TTS")])
+   def _get_info(self):
+      lang_mapping = {
+          "english": "en",
+          "portuguese": "pt",
+          "italian": "it",
+          "german": "de",
+          "spanish": "es",
+          "french": "fr",
+      }
+      voice_languages = getattr(CFG, "voice_languages", {})
+  
+      voices = []
+      for n in self.voice_states:
+          language = "de"
+          # 1. Prüfe manuelle Zuordnung
+          if n in voice_languages:
+              language = voice_languages[n]
+          # 2. Prüfe automatische Erkennung
+          else:
+              for lang_name, iso_code in lang_mapping.items():
+                  if lang_name in n:
+                      language = iso_code
+                      break
+          voices.append(
+              TtsVoice(
+                  name=n,
+                  languages=[language],
+                  installed=True,
+                  version="2.0",
+                  attribution={"name": "Kyutai", "url": "https://kyutai.org"},
+                  description=f"Pocket TTS: {n}"
+              )
+          )
+  
+      return Info(
+          tts=[TtsProgram(
+              name="Pocket TTS Streaming",
+              installed=True,
+              voices=voices,
+              version="2.0.0",
+              supports_synthesize_streaming=True,
+              attribution={"name": "Kyutai", "url": "https://kyutai.org"},
+              description="Ultra-low latency streaming TTS"
+          )]
+      )
 
     def _run_generator(self, text_iterator, base_voice_name, initial_v_state, audio_queue, loop, abort_event):
         tag_pattern = re.compile(r'\[([^\]]+)\]')
