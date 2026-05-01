@@ -315,6 +315,7 @@ class PocketTTSHandler(AsyncEventHandler):
             except Exception:
                 pass
 
+    
     def _get_info(self):
         # Mapping von Sprachbezeichnern im Stimmnamen zu ISO-Sprachcodes
         lang_mapping = {
@@ -342,7 +343,7 @@ class PocketTTSHandler(AsyncEventHandler):
             voices.append(
                 TtsVoice(
                     name=n,
-                    languages=[language],
+                    languages=[language],  # Sprache pro Stimme
                     installed=True,
                     version="2.0",
                     attribution={"name": "Kyutai", "url": "https://kyutai.org"},
@@ -350,17 +351,11 @@ class PocketTTSHandler(AsyncEventHandler):
                 )
             )
 
-        # Liste aller unterstützten Sprachen (aus den Stimmen abgeleitet)
-        supported_languages = set()
-        for voice in voices:
-            supported_languages.update(voice.languages)
-
         return Info(
             tts=[TtsProgram(
                 name="Pocket TTS Streaming",
                 installed=True,
-                voices=voices,
-                languages=list(supported_languages),  # WICHTIG: Unterstützte Sprachen des Services
+                voices=voices,  # Die Sprachen werden aus den Stimmen abgeleitet
                 version="2.0.0",
                 supports_synthesize_streaming=True,
                 attribution={"name": "Kyutai", "url": "https://kyutai.org"},
