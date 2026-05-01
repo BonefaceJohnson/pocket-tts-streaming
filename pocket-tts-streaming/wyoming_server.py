@@ -7,7 +7,6 @@ import re
 import time
 import wave
 import numpy as np
-import yaml  # Für das Parsen der config.yml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from functools import partial
@@ -27,58 +26,31 @@ from wyoming.event import Event
 torch.set_grad_enabled(False)
 
 def load_config():
-    """Lädt die Konfiguration aus der config.yml oder Umgebungsvariablen."""
+    """Lädt die Konfiguration aus Umgebungsvariablen (Home Assistant Addon)."""
     base_data = Path(os.getenv("DATA_DIR", "/share/pocket_tts_streaming"))
-    config_path = Path("/data/config.yml")
 
-    # Standardkonfiguration
+    # Standardwerte
     config = {
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
         "wyoming_language": os.getenv("WYOMING_LANGUAGE", "de"),  # Globaler ISO-Code für Wyoming
-        "voice": os.getenv("DEFAULT_VOICE", "alba"),
+        "voice": os.getenv("VOICE", "alba"),
         "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
         "data_dir": base_data,
         "models_dir": base_data / "models",
         "voices_dir": base_data / "voices",
-        "s2s_quick_yield": True,
-        "s2s_min_sentence_len": 15,
-        "s2s_min_first_frag": 10,
-        "enable_phonetic_dict": True,
+        "s2s_quick_yield": os.getenv("S2S_QUICK_YIELD_SINGLE_SENTENCE_FRAGMENT", "true").lower() == "true",
+        "s2s_min_sentence_len": int(os.getenv("S2S_MINIMUM_SENTENCE_LENGTH", 15)),
+        "s2s_min_first_frag": int(os.getenv("S2S_MINIMUM_FIRST_FRAGMENT_LENGTH", 10)),
+        "enable_phonetic_dict": os.getenv("ENABLE_PHONETIC_DICT", "true").lower() == "true",
         "dict_path": base_data / "pronunciations.json",
-        "pytorch_threads": 4,
-        "speaker_tail_padding": 0.3,
+        "pytorch_threads": int(os.getenv("PYTORCH_THREADS", 4)),
+        "speaker_tail_padding": float(os.getenv("SPEAKER_TAIL_PADDING", 0.3)),
     }
 
-    # Lade die YAML-Konfiguration, falls vorhanden
-    if config_path.exists():
-        try:
-            with open(config_path, "r") as f:
-                yaml_config = yaml.safe_load(f)
-
-            # Lade die Optionen aus dem "options"-Key der YAML
-            yaml_options = yaml_config.get("options", {})
-
-            # Überschreibe die Standardwerte mit den Werten aus der YAML
-            for key, value in yaml_options.items():
-                if key in config:
-                    # Konvertiere Typen, falls nötig
-                    if key in ["s2s_quick_yield_single_sentence_fragment", "enable_phonetic_dict"]:
-                        config[key] = bool(value)
-                    elif key in ["s2s_minimum_sentence_length", "s2s_minimum_first_fragment_length", "pytorch_threads"]:
-                        config[key] = int(value)
-                    elif key == "speaker_tail_padding":
-                        config[key] = float(value)
-                    elif key == "log_level":
-                        config[key] = value.upper()
-                    else:
-                        config[key] = value
-
-        except Exception as e:
-            print(f"CRITICAL: Failed to parse config.yml: {e}")
-
+    _LOGGER.debug(f"Loaded config: {config}")
     return config
 
 CFG = load_config()
@@ -120,6 +92,7 @@ if CFG["enable_phonetic_dict"]:
             CFG["dict_path"].write_text(json.dumps(default_dict, indent=4))
         except Exception as e:
             _LOGGER.error(f"Could not create default pronunciations.json: {e}")
+
 
 def normalize_wav(wav_path):
     """Normalisiert eine 16-Bit-PCM-WAV-Datei auf 95% der maximalen Lautstärke."""
