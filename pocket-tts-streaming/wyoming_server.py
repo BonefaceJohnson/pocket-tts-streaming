@@ -350,11 +350,17 @@ class PocketTTSHandler(AsyncEventHandler):
                 )
             )
 
+        # Liste aller unterstützten Sprachen (aus den Stimmen abgeleitet)
+        supported_languages = set()
+        for voice in voices:
+            supported_languages.update(voice.languages)
+
         return Info(
             tts=[TtsProgram(
                 name="Pocket TTS Streaming",
                 installed=True,
                 voices=voices,
+                languages=list(supported_languages),  # WICHTIG: Unterstützte Sprachen des Services
                 version="2.0.0",
                 supports_synthesize_streaming=True,
                 attribution={"name": "Kyutai", "url": "https://kyutai.org"},
