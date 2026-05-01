@@ -31,6 +31,7 @@ def load_config():
     base_data = Path(os.getenv("DATA_DIR", "/share/pocket_tts_streaming"))
     config_path = Path("/data/config.yml")
 
+    # Standardkonfiguration
     config = {
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
@@ -51,14 +52,29 @@ def load_config():
         "speaker_tail_padding": 0.3,
     }
 
+    # Lade die YAML-Konfiguration, falls vorhanden
     if config_path.exists():
         try:
             with open(config_path, "r") as f:
                 yaml_config = yaml.safe_load(f)
 
-            for key, value in yaml_config.get("options", {}).items():
+            # Lade die Optionen aus dem "options"-Key der YAML
+            yaml_options = yaml_config.get("options", {})
+
+            # Überschreibe die Standardwerte mit den Werten aus der YAML
+            for key, value in yaml_options.items():
                 if key in config:
-                    config[key] = value
+                    # Konvertiere Typen, falls nötig
+                    if key in ["s2s_quick_yield_single_sentence_fragment", "enable_phonetic_dict"]:
+                        config[key] = bool(value)
+                    elif key in ["s2s_minimum_sentence_length", "s2s_minimum_first_fragment_length", "pytorch_threads"]:
+                        config[key] = int(value)
+                    elif key == "speaker_tail_padding":
+                        config[key] = float(value)
+                    elif key == "log_level":
+                        config[key] = value.upper()
+                    else:
+                        config[key] = value
 
         except Exception as e:
             print(f"CRITICAL: Failed to parse config.yml: {e}")
