@@ -7,6 +7,7 @@ import re
 import time
 import wave
 import numpy as np
+import yaml  # Für das Parsen der config.yml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from functools import partial
@@ -19,14 +20,14 @@ from watchdog.observers.polling import PollingObserver as Observer
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.info import Info, TtsProgram, TtsVoice
 from wyoming.server import AsyncEventHandler, AsyncServer
-from wyoming.tts import (Synthesize, SynthesizeStart, SynthesizeStop,
-                         SynthesizeChunk)
+from wyoming.tts import Synthesize, SynthesizeStart, SynthesizeStop, SynthesizeChunk
 from wyoming.event import Event
 
 # Optimize for inference
 torch.set_grad_enabled(False)
 
 def load_config():
+    """Lädt die Konfiguration aus der config.yml oder Umgebungsvariablen."""
     base_data = Path(os.getenv("DATA_DIR", "/share/pocket_tts_streaming"))
     config_path = Path("/data/config.yml")
 
@@ -34,7 +35,7 @@ def load_config():
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
-        "wyoming_language": os.getenv("WYOMING_LANGUAGE", "de"),  # Neues Feld
+        "wyoming_language": os.getenv("WYOMING_LANGUAGE", "de"),  # Globaler ISO-Code für Wyoming
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
         "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
@@ -60,7 +61,7 @@ def load_config():
                     config[key] = value
 
         except Exception as e:
-            _LOGGER.error(f"Failed to parse config.yml: {e}")
+            print(f"CRITICAL: Failed to parse config.yml: {e}")
 
     return config
 
@@ -80,7 +81,7 @@ if CFG["hf_token"]:
 CFG["voices_dir"].mkdir(parents=True, exist_ok=True)
 CFG["models_dir"].mkdir(parents=True, exist_ok=True)
 
-# Apply the configured PyTorch threads (Ideal for your CPU-only setup)
+# Apply the configured PyTorch threads
 torch.set_num_threads(CFG["pytorch_threads"])
 _LOGGER.debug(f"PyTorch threads set to: {CFG['pytorch_threads']}")
 
@@ -105,7 +106,7 @@ if CFG["enable_phonetic_dict"]:
             _LOGGER.error(f"Could not create default pronunciations.json: {e}")
 
 def normalize_wav(wav_path):
-    """Safely normalizes a 16-bit PCM wav file to 95% peak volume."""
+    """Normalisiert eine 16-Bit-PCM-WAV-Datei auf 95% der maximalen Lautstärke."""
     try:
         with wave.open(str(wav_path), 'rb') as wav:
             params = wav.getparams()
@@ -294,33 +295,21 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
-      # Verwende den manuell definierten wyoming_language für alle Stimmen
-      wyoming_language = CFG.get("wyoming_language", "de")  # Fallback: "de"
-  
-      voices = []
-      for n in self.voice_states:
-          voices.append(
-              TtsVoice(
-                  name=n,
-                  languages=[wyoming_language],  # Alle Stimmen verwenden den gleichen ISO-Code
-                  installed=True,
-                  version="2.0",
-                  attribution={"name": "Kyutai", "url": "https://kyutai.org"},
-                  description=f"Pocket TTS: {n}"
-              )
-          )
-  
-      return Info(
-          tts=[TtsProgram(
-              name="Pocket TTS Streaming",
-              installed=True,
-              voices=voices,
-              version="2.0.0",
-              supports_synthesize_streaming=True,
-              attribution={"name": "Kyutai", "url": "https://kyutai.org"},
-              description="Ultra-low latency streaming TTS"
-          )]
-      )
+        """Gibt die Info für das Wyoming-Protokoll zurück. Alle Stimmen verwenden den globalen wyoming_language-ISO-Code."""
+        wyoming_language = CFG.get("wyoming_language", "de")  # Globaler ISO-Code für alle Stimmen
+
+        voices = []
+        for n in self.voice_states:
+            voices.append(
+                TtsVoice(
+                    name=n,
+                    languages=[wyoming_language],  # Alle Stimmen verwenden den gleichen ISO-Code
+                    installed=True,
+                    version="2.0",
+                    attribution={"name": "Kyutai", "url": "https://kyutai.org"},
+                    description=f"Pocket TTS: {n}"
+                )
+            )
 
         return Info(
             tts=[TtsProgram(
@@ -356,7 +345,6 @@ class PocketTTSHandler(AsyncEventHandler):
                 # Extract tags to determine the voice for this sentence
                 tags = tag_pattern.findall(sentence)
                 if tags:
-                    # Grab the first tag found in the sentence to set the emotion
                     tag = tags[0].strip().lower()
                     emotion_voice = f"{base_voice_name}_{tag}"
 
@@ -386,7 +374,7 @@ class PocketTTSHandler(AsyncEventHandler):
 
                 _LOGGER.debug(f"Phraser yielded clean sentence: '{clean_sentence}' using voice: {current_voice_name}")
 
-                # Generate the audio stream..
+                # Generate the audio stream
                 for chunk in self.model.generate_audio_stream(current_v_state, clean_sentence):
                     if abort_event.is_set(): break
                     audio_data = (chunk.clamp(-1.0, 1.0) * 32767).to(torch.int16).cpu().numpy().tobytes()
