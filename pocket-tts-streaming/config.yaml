@@ -22,6 +22,7 @@ options:
 schema:
   hf_token: password
   language: str
+  wyoming_language: str
   builtin_voices: str
   voice: str
   log_level: list(debug|info|warning|error)
