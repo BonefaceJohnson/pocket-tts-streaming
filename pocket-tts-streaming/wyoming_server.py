@@ -34,6 +34,7 @@ def load_config():
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
+        "wyoming_language": os.getenv("WYOMING_LANGUAGE", "de"),
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
         "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
@@ -303,6 +304,9 @@ class PocketTTSHandler(AsyncEventHandler):
                 pass
 
     def _get_info(self):
+
+        wyoming_lang = CFG["wyoming_language"]
+      
         voices = [TtsVoice(name=n, languages=["de"], installed=True, version="2.0",
                            attribution={"name": "Kyutai", "url": "https://kyutai.org"},
                            description=f"Pocket TTS: {n}") for n in self.voice_states]
