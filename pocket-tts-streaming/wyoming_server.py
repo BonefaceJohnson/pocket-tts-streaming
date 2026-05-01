@@ -28,13 +28,13 @@ torch.set_grad_enabled(False)
 
 def load_config():
     base_data = Path(os.getenv("DATA_DIR", "/share/pocket_tts_streaming"))
-    opts_path = Path("/data/options.json")
+    config_path = Path("/data/config.yml")
 
     config = {
         "hf_token": os.getenv("HF_TOKEN", ""),
         "port": int(os.getenv("WYOMING_PORT", 10222)),
         "language": os.getenv("LANGUAGE", "german"),
-        "default_language": os.getenv("DEFAULT_LANGUAGE", "de"),
+        "wyoming_language": os.getenv("WYOMING_LANGUAGE", "de"),  # Neues Feld
         "voice": os.getenv("DEFAULT_VOICE", "alba"),
         "builtin_voices": os.getenv("BUILTIN_VOICES", "alba, marius, javert, jean, eve, fantine, cosette, eponine, azelma"),
         "log_level": os.getenv("LOG_LEVEL", "info").upper(),
@@ -48,42 +48,19 @@ def load_config():
         "dict_path": base_data / "pronunciations.json",
         "pytorch_threads": 4,
         "speaker_tail_padding": 0.3,
-        "voice_languages": {
-            "alba": "de",
-            "marius": "de",
-            "javert": "fr",
-            "jean": "fr",
-            "eve": "en",
-            "fantine": "fr",
-            "cosette": "fr",
-            "eponine": "fr",
-            "azelma": "fr",
-        },
     }
 
-    if opts_path.exists():
+    if config_path.exists():
         try:
-            opts = json.loads(opts_path.read_text())
-            for k in ["hf_token", "port", "language", "default_language", "voice", "builtin_voices", "log_level"]:
-                if k in opts: config[k] = opts[k]
+            with open(config_path, "r") as f:
+                yaml_config = yaml.safe_load(f)
 
-            if "s2s_quick_yield_single_sentence_fragment" in opts:
-                config["s2s_quick_yield"] = bool(opts["s2s_quick_yield_single_sentence_fragment"])
-            if "s2s_minimum_sentence_length" in opts:
-                config["s2s_min_sentence_len"] = int(opts["s2s_minimum_sentence_length"])
-            if "s2s_minimum_first_fragment_length" in opts:
-                config["s2s_min_first_frag"] = int(opts["s2s_minimum_first_fragment_length"])
-            if "enable_phonetic_dict" in opts:
-                config["enable_phonetic_dict"] = bool(opts["enable_phonetic_dict"])
-            if "pytorch_threads" in opts:
-                config["pytorch_threads"] = int(opts["pytorch_threads"])
-            if "speaker_tail_padding" in opts:
-                config["speaker_tail_padding"] = float(opts["speaker_tail_padding"])
-            if "voice_languages" in opts:
-                config["voice_languages"].update(opts["voice_languages"])
+            for key, value in yaml_config.get("options", {}).items():
+                if key in config:
+                    config[key] = value
 
         except Exception as e:
-            print(f"CRITICAL: Failed to parse options.json: {e}")
+            _LOGGER.error(f"Failed to parse config.yml: {e}")
 
     return config
 
